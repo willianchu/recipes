@@ -41,6 +41,16 @@ router.get('/', (req, res) => {
   res.send(recipes);
 });
 
+router.get('/:dish', (req, res) => {
+  const dish = req.params.dish;
+  const recipe = recipes.find(recipe => recipe.name === dish);
+  if (recipe) {
+    res.send(recipe);
+  } else {
+    res.status(404).send({error: "Recipe not found"});
+  }
+});
+
 router.post('/', (req, res) => {
   console.log('Incoming POST request');
   const newRecipe = req.body;
