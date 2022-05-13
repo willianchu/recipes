@@ -1,43 +1,21 @@
 const express = require('express');
-
 const router = express.Router();
+const fs = require('fs');
 
-const recipes = [
-  {
-    name: "scrambledEggs",
-    ingredients: [
-      "1 tsp oil",
-      "2 eggs",
-      "salt"
-    ],
-    instructions: [
-      "Beat eggs with salt",
-      "Heat oil in pan",
-      "Add eggs to pan when hot",
-      "Gather eggs into curds, remove when cooked",
-      "Salt to taste and enjoy"
-    ]
-  },
-  {
-    name: "garlicPasta",
-    ingredients: [
-      "500mL water",
-      "100g spaghetti",
-      "25mL olive oil",
-      "4 cloves garlic",
-      "Salt"
-    ],
-    instructions: [
-      "Heat garlic in olive oil",
-      "Boil water in pot",
-      "Add pasta to boiling water",
-      "Remove pasta from water and mix with garlic olive oil",
-      "Salt to taste and enjoy"
-    ]
+
+const RECIPE_FILE = './data.json';
+const getData = () => {
+  try {
+        return JSON.parse(fs.readFileSync(RECIPE_FILE));
+  } catch (err) {
+        console.error(err);
   }
-];
+};
+
+const recipes = getData().recipes;
 
 router.get('/', (req, res) => {
+  console.log("recipes logging", recipes);
   res.send(recipes);
 });
 
@@ -52,11 +30,23 @@ router.get('/:dish', (req, res) => {
 });
 
 router.post('/', (req, res) => {
-  console.log('Incoming POST request');
   const newRecipe = req.body;
   recipes.push(newRecipe);
   res.send(recipes);
 });
+
+router.delete('/:dish', (req, res) => {
+  const dish = req.params.dish;
+  const recipe = recipes.find(recipe => recipe.name === dish);
+  if (recipe) {
+    const index = recipes.indexOf(recipe);
+    recipes.splice(index, 1);
+    res.send("recipe deleted");
+  } else {
+    res.status(404).send({error: "Recipe not found"});
+  }
+});
+
 
 
 module.exports = router;
