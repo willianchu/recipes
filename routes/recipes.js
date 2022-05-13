@@ -20,7 +20,7 @@ router.get('/:dish', (req, res) => {
   if (recipe) {
     res.send(recipe);
   } else {
-    res.status(404).send({error: `Recipe not found for ${dish}`});
+    res.status(200).send({});
   }
 });
 
@@ -29,9 +29,9 @@ router.post('/', (req, res) => {
     const newRecipe = req.body;
     recipes.push(newRecipe);
     mockDatabase.saveData(recipes);
-    res.send('New recipe added');
+    res.status(201).send(newRecipe);
   } catch (err) {
-    res.status(500).send({error: `Unable to add recipe`});
+    res.status(400).send({error: "Recipe already exists"});
   }
 });
 
@@ -48,16 +48,17 @@ router.delete('/:dish', (req, res) => {
   }
 });
 
-router.put('/:dish', (req, res) => {
-  const dish = req.params.dish;
+router.put('/', (req, res) => {
+  const newRecipe = req.body;
+  const dish = newRecipe.name;
   const recipe = recipes.find(recipe => recipe.name === dish);
   if (recipe) {
     const index = recipes.indexOf(recipe);
-    recipes[index] = req.body;
+    recipes[index] = newRecipe;
     mockDatabase.saveData(recipes);
-    res.send("recipes updated");
+    res.status(204).send();
   } else {
-    res.status(404).send({error: `Recipe ${dish} not found`});
+    res.status(404).send({error: "Recipe does not exist"});
   }
 });
 
