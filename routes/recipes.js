@@ -1,22 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const fs = require('fs');
+const mockDatabase = require('../mockDatabase.js');
 
 
-const RECIPE_FILE = './data.json';
-const getData = () => {
-  try {
-        return JSON.parse(fs.readFileSync(RECIPE_FILE));
-  } catch (err) {
-        console.error(err);
-  }
-};
-
-const recipes = getData().recipes;
+const data = mockDatabase.getData();
+const recipes = data.recipes;
 
 router.get('/', (req, res) => {
-  console.log("recipes logging", recipes);
-  res.send(recipes);
+  if (Array.isArray(recipes)) {
+    res.send(recipes);
+  } else {
+    res.status(404).send({error: `Unable to reach recipes`});
+  }
 });
 
 router.get('/:dish', (req, res) => {
@@ -25,14 +20,19 @@ router.get('/:dish', (req, res) => {
   if (recipe) {
     res.send(recipe);
   } else {
-    res.status(404).send({error: "Recipe not found"});
+    res.status(404).send({error: `Recipe not found for ${dish}`});
   }
 });
 
 router.post('/', (req, res) => {
-  const newRecipe = req.body;
-  recipes.push(newRecipe);
-  res.send(recipes);
+  try {
+    const newRecipe = req.body;
+    recipes.push(newRecipe);
+    mockDatabase.saveData(recipes);
+    res.send('New recipe added');
+  } catch (err) {
+    res.status(500).send({error: `Unable to add recipe`});
+  }
 });
 
 router.delete('/:dish', (req, res) => {
@@ -41,12 +41,25 @@ router.delete('/:dish', (req, res) => {
   if (recipe) {
     const index = recipes.indexOf(recipe);
     recipes.splice(index, 1);
-    res.send("recipe deleted");
+    mockDatabase.saveData(recipes);
+    res.send(`${dish} deleted`);
   } else {
-    res.status(404).send({error: "Recipe not found"});
+    res.status(404).send({error: `Recipe not found for ${dish}`});
   }
 });
 
+router.put('/:dish', (req, res) => {
+  const dish = req.params.dish;
+  const recipe = recipes.find(recipe => recipe.name === dish);
+  if (recipe) {
+    const index = recipes.indexOf(recipe);
+    recipes[index] = req.body;
+    mockDatabase.saveData(recipes);
+    res.send("recipes updated");
+  } else {
+    res.status(404).send({error: `Recipe ${dish} not found`});
+  }
+});
 
 
 module.exports = router;
